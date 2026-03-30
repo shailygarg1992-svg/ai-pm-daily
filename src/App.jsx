@@ -418,6 +418,9 @@ function HomeView({ scores, streak, avgScore, completedDays, openDay, level, set
         ))}
       </div>
 
+      {/* Daily AI Pulse */}
+      <DailyPulse />
+
       {/* Phase Hero */}
       <div style={{ background: T.warmBg, borderRadius: 14, padding: '20px 18px', marginBottom: 20 }}>
         <div style={{
@@ -968,6 +971,227 @@ function ResultsView({ day, dayIdx, quizAnswers, scores, goHome, openDay }) {
           borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: 'pointer',
         }}>Back to Home</button>
       </div>
+    </div>
+  );
+}
+
+// ─── Daily AI Pulse (live content) ──────────────────────────────
+function DailyPulse() {
+  const [pulse, setPulse] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [expanded, setExpanded] = useState(false);
+  const [quizState, setQuizState] = useState({ idx: 0, answered: false, selected: null });
+
+  const fetchPulse = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/daily-pulse');
+      if (!res.ok) throw new Error(`${res.status}`);
+      const data = await res.json();
+      setPulse(data);
+      // Cache locally
+      saveState('dailyPulse', data);
+      saveState('dailyPulseDate', new Date().toDateString());
+    } catch (e) {
+      setError(e.message);
+      // Try loading from cache
+      const cached = loadState('dailyPulse', null);
+      if (cached) setPulse(cached);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Check if we already have today's pulse cached
+    const cachedDate = loadState('dailyPulseDate', '');
+    const cached = loadState('dailyPulse', null);
+    if (cachedDate === new Date().toDateString() && cached) {
+      setPulse(cached);
+    } else {
+      fetchPulse();
+    }
+  }, [fetchPulse]);
+
+  if (!pulse && !loading && !error) return null;
+
+  const accentColor = '#F59E0B';
+
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <button onClick={() => setExpanded(!expanded)} style={{
+        width: '100%', background: expanded ? `${accentColor}08` : T.card,
+        border: `1px solid ${expanded ? accentColor : T.border}`,
+        borderRadius: 14, padding: '16px 18px', cursor: 'pointer',
+        textAlign: 'left', transition: 'all 0.2s', color: T.text,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 22 }}>{'\u26A1'}</span>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 700 }}>Today's AI Pulse</div>
+              <div style={{ fontSize: 11, color: T.sub, marginTop: 1 }}>
+                {loading ? 'Generating fresh briefing...'
+                  : error && !pulse ? 'Tap to retry'
+                  : pulse?.headline || 'Live AI news & insights'}
+              </div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {loading && <span style={{
+              display: 'inline-block', width: 14, height: 14, border: '2px solid #E5E7EB',
+              borderTopColor: accentColor, borderRadius: '50%',
+              animation: 'spin 0.8s linear infinite',
+            }} />}
+            <span style={{
+              fontSize: 9, fontWeight: 700, padding: '3px 6px', borderRadius: 4,
+              background: `${accentColor}15`, color: accentColor,
+              fontFamily: "'JetBrains Mono', monospace", textTransform: 'uppercase',
+            }}>LIVE</span>
+            <span style={{ color: T.sub, fontSize: 14 }}>{expanded ? '\u25B2' : '\u25BC'}</span>
+          </div>
+        </div>
+      </button>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+
+      {expanded && pulse && (
+        <div style={{
+          background: T.card, border: `1px solid ${T.border}`, borderTop: 'none',
+          borderRadius: '0 0 14px 14px', padding: '16px 18px',
+          marginTop: -14, paddingTop: 28,
+          animation: 'fadeUp 0.3s ease',
+        }}>
+          {/* Briefing items */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 18 }}>
+            {pulse.briefing?.map((item, i) => (
+              <div key={i} style={{
+                borderLeft: `3px solid ${accentColor}`,
+                paddingLeft: 12,
+              }}>
+                <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{item.title}</div>
+                <p style={{ fontSize: 13, lineHeight: 1.6, margin: '0 0 6px', color: '#374151' }}>
+                  {item.text}
+                </p>
+                <div style={{
+                  fontSize: 12, color: accentColor, fontWeight: 600,
+                  background: `${accentColor}08`, padding: '6px 10px',
+                  borderRadius: 6,
+                }}>
+                  {'\uD83C\uDFAF'} {item.pmTakeaway}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Mini Quiz */}
+          {pulse.quiz?.length > 0 && (
+            <div style={{
+              background: T.warmBg, borderRadius: 12, padding: '14px 16px', marginBottom: 14,
+            }}>
+              <div style={{
+                fontSize: 11, fontWeight: 700, color: T.sub, marginBottom: 8,
+                textTransform: 'uppercase', letterSpacing: '0.5px',
+                fontFamily: "'JetBrains Mono', monospace",
+              }}>{'\uD83E\uDDE0'} Quick Check</div>
+              <p style={{ fontSize: 14, fontWeight: 600, margin: '0 0 10px' }}>
+                {pulse.quiz[quizState.idx]?.question}
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {pulse.quiz[quizState.idx]?.options.map((opt, oi) => {
+                  const q = pulse.quiz[quizState.idx];
+                  const isCorrect = oi === q.answer;
+                  const isSelected = quizState.selected === oi;
+                  let bg = T.card, bc = T.border;
+                  if (quizState.answered) {
+                    if (isCorrect) { bg = '#F0FDF4'; bc = T.green; }
+                    if (isSelected && !isCorrect) { bg = '#FEF2F2'; bc = T.red; }
+                  }
+                  return (
+                    <button key={oi} disabled={quizState.answered}
+                      onClick={() => setQuizState(s => ({ ...s, answered: true, selected: oi }))}
+                      style={{
+                        padding: '10px 12px', fontSize: 13, textAlign: 'left',
+                        background: bg, border: `1px solid ${bc}`, borderRadius: 8,
+                        cursor: quizState.answered ? 'default' : 'pointer',
+                        opacity: quizState.answered && !isCorrect && !isSelected ? 0.5 : 1,
+                        color: T.text,
+                      }}>{opt}</button>
+                  );
+                })}
+              </div>
+              {quizState.answered && (
+                <div style={{ marginTop: 8 }}>
+                  <p style={{ fontSize: 12, color: T.sub, margin: '0 0 6px' }}>
+                    {pulse.quiz[quizState.idx]?.explanation}
+                  </p>
+                  {quizState.idx < pulse.quiz.length - 1 && (
+                    <button onClick={() => setQuizState({ idx: quizState.idx + 1, answered: false, selected: null })}
+                      style={{
+                        padding: '8px 14px', fontSize: 12, fontWeight: 600,
+                        background: accentColor, color: '#fff', border: 'none',
+                        borderRadius: 6, cursor: 'pointer',
+                      }}>Next Question {'\u2192'}</button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Tool Spotlight */}
+          {pulse.toolSpotlight && (
+            <div style={{
+              background: '#EFF6FF', borderRadius: 12, padding: '14px 16px',
+              borderLeft: '3px solid #3B82F6', marginBottom: 14,
+            }}>
+              <div style={{
+                fontSize: 11, fontWeight: 700, color: '#3B82F6', marginBottom: 6,
+                textTransform: 'uppercase', letterSpacing: '0.5px',
+                fontFamily: "'JetBrains Mono', monospace",
+              }}>{'\uD83D\uDD27'} Tool Spotlight: {pulse.toolSpotlight.name}</div>
+              <p style={{ fontSize: 13, lineHeight: 1.5, margin: '0 0 8px', color: '#1E40AF' }}>
+                {pulse.toolSpotlight.description}
+              </p>
+              <p style={{ fontSize: 12, margin: '0 0 8px', color: '#2563EB', fontWeight: 600 }}>
+                {'\uD83C\uDFAF'} Try it: {pulse.toolSpotlight.tryIt}
+              </p>
+              <a href={pulse.toolSpotlight.url} target="_blank" rel="noopener noreferrer" style={{
+                fontSize: 12, color: '#3B82F6', fontWeight: 600, textDecoration: 'none',
+              }}>Visit {pulse.toolSpotlight.name} {'\u2192'}</a>
+            </div>
+          )}
+
+          {/* Refresh */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: 11, color: T.sub }}>
+              {pulse.date ? `Updated: ${pulse.date}` : ''}
+            </span>
+            <button onClick={fetchPulse} disabled={loading} style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontSize: 12, color: accentColor, fontWeight: 600,
+              opacity: loading ? 0.5 : 1,
+            }}>{loading ? 'Refreshing...' : '\u21BB Refresh'}</button>
+          </div>
+        </div>
+      )}
+
+      {expanded && error && !pulse && (
+        <div style={{
+          background: '#FEF2F2', border: `1px solid ${T.red}20`, borderTop: 'none',
+          borderRadius: '0 0 14px 14px', padding: '16px 18px', marginTop: -14, paddingTop: 28,
+        }}>
+          <p style={{ fontSize: 13, color: T.red, margin: '0 0 8px' }}>
+            Couldn't load today's AI pulse. This feature requires the AI Gateway to be active.
+          </p>
+          <button onClick={fetchPulse} style={{
+            padding: '8px 14px', fontSize: 12, fontWeight: 600,
+            background: T.red, color: '#fff', border: 'none',
+            borderRadius: 6, cursor: 'pointer',
+          }}>Retry</button>
+        </div>
+      )}
     </div>
   );
 }
