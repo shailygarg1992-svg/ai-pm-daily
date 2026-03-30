@@ -1,0 +1,7 @@
+node_modules
+dist
+.env*.local
+src/assets/hero.png
+src/assets/react.svg
+src/assets/vite.svg
+public/icons.svg
