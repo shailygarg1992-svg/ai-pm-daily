@@ -982,6 +982,7 @@ function DailyPulse() {
   const [error, setError] = useState(null);
   const [expanded, setExpanded] = useState(false);
   const [quizState, setQuizState] = useState({ idx: 0, answered: false, selected: null });
+  const tts = useTTS();
 
   const fetchPulse = useCallback(async () => {
     setLoading(true);
@@ -1064,23 +1065,55 @@ function DailyPulse() {
           marginTop: -14, paddingTop: 28,
           animation: 'fadeUp 0.3s ease',
         }}>
-          {/* Briefing items */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 18 }}>
+          {/* Listen Button */}
+          <div style={{ marginBottom: 14 }}>
+            <button onClick={() => {
+              if (tts.speaking) { tts.stop(); return; }
+              // Build speech text: title + PM takeaway for each item
+              const items = (pulse.briefing || []).map(b => ({
+                text: b.title + '. ' + b.text,
+                example: 'PM Takeaway: ' + b.pmTakeaway,
+              }));
+              tts.speakAll(items);
+            }} style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '10px 16px', fontSize: 13, fontWeight: 600,
+              background: tts.speaking ? '#FEF3C7' : `${accentColor}12`,
+              color: tts.speaking ? '#92400E' : accentColor,
+              border: `1px solid ${tts.speaking ? '#F59E0B' : accentColor}30`,
+              borderRadius: 10, cursor: 'pointer', width: '100%',
+              justifyContent: 'center', transition: 'all 0.2s',
+            }}>
+              <span style={{ fontSize: 16 }}>{tts.speaking ? '\u23F8' : '\uD83C\uDFA7'}</span>
+              {tts.speaking ? 'Pause Listening' : 'Listen to Pulse'}
+            </button>
+          </div>
+
+          {/* Briefing items — bulleted format */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 18 }}>
             {pulse.briefing?.map((item, i) => (
               <div key={i} style={{
-                borderLeft: `3px solid ${accentColor}`,
-                paddingLeft: 12,
+                background: tts.speaking && tts.currentIdx === i ? `${accentColor}08` : 'transparent',
+                borderRadius: 10, padding: tts.speaking && tts.currentIdx === i ? '10px 12px' : '0 0 0 0',
+                transition: 'all 0.2s',
               }}>
-                <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{item.title}</div>
-                <p style={{ fontSize: 13, lineHeight: 1.6, margin: '0 0 6px', color: '#374151' }}>
-                  {item.text}
-                </p>
-                <div style={{
-                  fontSize: 12, color: accentColor, fontWeight: 600,
-                  background: `${accentColor}08`, padding: '6px 10px',
-                  borderRadius: 6,
-                }}>
-                  {'\uD83C\uDFAF'} {item.pmTakeaway}
+                {/* Main bullet: title */}
+                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                  <span style={{ color: accentColor, fontWeight: 700, fontSize: 15, lineHeight: '20px', flexShrink: 0 }}>{'\u2022'}</span>
+                  <div style={{ fontSize: 14, fontWeight: 700, lineHeight: '20px' }}>{item.title}</div>
+                </div>
+                {/* Sub-bullets */}
+                <div style={{ paddingLeft: 18, marginTop: 6, display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  {/* Summary sub-bullet */}
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'flex-start' }}>
+                    <span style={{ color: T.sub, fontSize: 11, lineHeight: '18px', flexShrink: 0 }}>{'\u25E6'}</span>
+                    <span style={{ fontSize: 13, lineHeight: '18px', color: '#374151' }}>{item.text}</span>
+                  </div>
+                  {/* PM Takeaway sub-bullet */}
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'flex-start' }}>
+                    <span style={{ color: accentColor, fontSize: 11, lineHeight: '18px', flexShrink: 0 }}>{'\uD83C\uDFAF'}</span>
+                    <span style={{ fontSize: 12, lineHeight: '18px', color: accentColor, fontWeight: 600 }}>{item.pmTakeaway}</span>
+                  </div>
                 </div>
               </div>
             ))}
@@ -1160,6 +1193,28 @@ function DailyPulse() {
               <a href={pulse.toolSpotlight.url} target="_blank" rel="noopener noreferrer" style={{
                 fontSize: 12, color: '#3B82F6', fontWeight: 600, textDecoration: 'none',
               }}>Visit {pulse.toolSpotlight.name} {'\u2192'}</a>
+            </div>
+          )}
+
+          {/* Quick Takeaways */}
+          {pulse.briefing?.length > 0 && (
+            <div style={{
+              background: '#FFFBEB', borderRadius: 12, padding: '14px 16px',
+              borderLeft: `3px solid ${accentColor}`, marginBottom: 14,
+            }}>
+              <div style={{
+                fontSize: 11, fontWeight: 700, color: accentColor, marginBottom: 10,
+                textTransform: 'uppercase', letterSpacing: '0.5px',
+                fontFamily: "'JetBrains Mono', monospace",
+              }}>{'\u26A1'} Quick Takeaways</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {pulse.briefing.map((item, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                    <span style={{ color: accentColor, fontWeight: 700, fontSize: 13, lineHeight: '18px', flexShrink: 0 }}>{i + 1}.</span>
+                    <span style={{ fontSize: 12, lineHeight: '18px', color: '#92400E', fontWeight: 500 }}>{item.pmTakeaway}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
