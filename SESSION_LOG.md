@@ -1,6 +1,7 @@
 # AI PM Daily — Build Session Log
 
 **Date**: March 29-30, 2026
+**Updated**: March 30, 2026
 **Builder**: Shaily Garg + Claude Opus 4.6
 **Project**: AI PM Daily — 5-Minute Daily AI Learning App for Product Managers
 
@@ -65,9 +66,32 @@
 - Created GitHub repo: `shailygarg1992-svg/ai-pm-daily` (public)
 - Deployed to Vercel production: **https://ai-pm-daily.vercel.app**
 - Connected GitHub for auto-deploy on push
-- Two commits pushed:
+
+### 7. Live AI Content — Daily Pulse (Session 2)
+- **Vercel Serverless Function** (`/api/daily-pulse.js`): two-step AI pipeline
+  - Step 1: Perplexity (`perplexity/sonar-pro`) searches latest 48h AI news
+  - Step 2: Claude (`anthropic/claude-sonnet-4.5`) structures into JSON (5 briefing items, 3 quiz questions, tool spotlight)
+- **AI Gateway + OIDC**: Vercel-managed authentication via `VERCEL_OIDC_TOKEN` — no manual API keys
+- **Cron Job**: `vercel.json` schedule runs `/api/daily-pulse` daily at 6 AM UTC
+- **Caching**: 12h in-memory server cache + `Cache-Control: s-maxage=43200` + client-side localStorage cache
+- **DailyPulse component** on Home screen: expandable card with LIVE badge, mini quiz, tool spotlight
+
+### 8. Daily Pulse Enhancements (Session 2 continued)
+- **Audio Listening**: "Listen to Pulse" button using `useTTS()` hook — reads all 5 briefing titles + summaries + PM takeaways with sentence-level pausing
+- **Bulleted Layout**: Reformatted from paragraph blocks to structured bullets:
+  - Main bullet: headline title
+  - Sub-bullet (open circle): summary text
+  - Sub-bullet (target icon): PM takeaway in amber highlight
+- **Active Item Highlighting**: Currently-playing TTS item gets subtle background highlight
+- **Quick Takeaways Section**: Numbered summary at the bottom listing all 5 PM takeaways in a compact amber card
+- **localStorage vs Supabase evaluation**: Analyzed tradeoffs; staying with localStorage for MVP simplicity
+
+### 9. Commits & Deploys
+- Four commits pushed total:
   1. Initial release with all core features
   2. localStorage persistence, level-based content, completion rounds, hot tools
+  3. Live AI Daily Pulse with AI Gateway + Perplexity + Claude pipeline
+  4. Audio, bulleted layout, and quick takeaways for Daily Pulse
 
 ---
 
@@ -82,13 +106,19 @@
 | State | React useState + localStorage | No backend needed for MVP |
 | Fonts | Google Fonts CDN | Newsreader, Source Sans 3, JetBrains Mono |
 | Hosting | Vercel | Auto-deploy from GitHub, free tier, PWA support |
-| Content | Static JS constants | No API calls, instant load, works offline |
+| Content (curriculum) | Static JS constants | No API calls, instant load, works offline |
+| Content (Daily Pulse) | AI Gateway (Perplexity + Claude) | Live AI news, updated daily via cron |
+| AI Auth | Vercel OIDC | Auto-provisioned, no manual API keys |
+| Caching | In-memory + CDN + localStorage | 12h server cache, CDN s-maxage, client cache |
 
 ## Files Modified
 
 ```
 ai-pm-daily/
 ├── index.html          — Meta tags, PWA config, title
+├── vercel.json         — Cron job config (daily 6 AM UTC)
+├── api/
+│   └── daily-pulse.js  — Serverless function: Perplexity → Claude → structured JSON
 ├── public/
 │   ├── manifest.json   — PWA manifest
 │   ├── favicon.svg     — Custom icon
@@ -97,14 +127,19 @@ ai-pm-daily/
 │   └── apple-touch-icon.png
 ├── src/
 │   ├── main.jsx        — Entry point (removed CSS import)
-│   ├── App.jsx         — All components (Home, Briefing, Quiz, Results, Onboarding, HotTools)
+│   ├── App.jsx         — All components (Home, Briefing, Quiz, Results, Onboarding, HotTools, DailyPulse)
 │   └── data.js         — 7 days curriculum + 10 hot tools + tool-day mapping
+├── SESSION_LOG.md      — This file
+├── SESSION_SUMMARY.md  — High-level summary
 └── package.json
 ```
 
 ## Known Limitations / Future Work
 - Web Speech API TTS is robotic — future: ElevenLabs or OpenAI TTS API for natural audio
-- No backend / user accounts — state is device-local only
+- No backend / user accounts — state is device-local only (localStorage)
+- Consider Supabase migration for cross-device sync, user accounts, analytics
 - Phase 2 (Interview Prep) content not yet built
 - No spaced repetition algorithm — future Phase 3
 - YouTube learning links are search URLs, not curated video links
+- AI Gateway costs ~$0.03-0.05/pulse generation — monitor via Vercel dashboard
+- Daily Pulse requires AI Gateway to be active on Vercel project

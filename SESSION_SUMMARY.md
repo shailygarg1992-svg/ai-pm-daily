@@ -8,10 +8,14 @@ A mobile-first progressive web app (PWA) that delivers 5-minute daily AI briefin
 
 ## Key Features
 - **7-day AI curriculum** with 5 briefing bullets + 5 quiz questions per day
-- **Audio briefings** via browser text-to-speech (listen while commuting)
+- **Live Daily Pulse** — AI-generated news briefing using Perplexity + Claude via Vercel AI Gateway, updated daily at 6 AM UTC
+- **Audio briefings** via browser text-to-speech (listen while commuting) — works for both curriculum and Daily Pulse
 - **Adaptive difficulty** — set your AI knowledge level (1-10) and content adjusts from simple analogies to technical architecture details
 - **Hot AI Tools** — 10 trending tools (Claude Code, Cursor, v0, Bolt.new, etc.) with hands-on assignments
 - **Quiz with learning links** — wrong answers link to YouTube videos for targeted learning
+- **Daily Pulse mini-quiz** — 3 questions testing comprehension of today's AI news
+- **Tool Spotlight** — daily featured AI tool related to current news with try-it action
+- **Quick Takeaways** — compact numbered summary of all 5 PM takeaways from the Daily Pulse
 - **Progress persistence** — scores and level saved to localStorage, survives browser refresh
 - **Completion rounds** — finish all 7 days, level up automatically, replay with deeper content
 - **iPhone-ready PWA** — add to home screen for native app experience
@@ -21,6 +25,8 @@ A mobile-first progressive web app (PWA) that delivers 5-minute daily AI briefin
 - Inline CSS-in-JS (no external CSS)
 - Web Speech API for TTS audio
 - localStorage for state persistence
+- Vercel AI Gateway (OIDC auth) — Perplexity + Claude for live content
+- Vercel Serverless Functions + Cron Jobs for daily content generation
 - Deployed on Vercel with GitHub auto-deploy
 
 ## What the User Requested vs. What Was Delivered
@@ -40,14 +46,23 @@ A mobile-first progressive web app (PWA) that delivers 5-minute daily AI briefin
 | Content refresh after completion | Done — "Level Up & Replay" at higher difficulty |
 | Push to GitHub | Done — `shailygarg1992-svg/ai-pm-daily` |
 | Deploy to Vercel | Done — `ai-pm-daily.vercel.app` |
+| Live AI Daily Pulse | Done — Perplexity + Claude pipeline via AI Gateway |
+| Audio for Daily Pulse | Done — Listen to Pulse button with TTS |
+| Bulleted Pulse layout | Done — structured bullets + sub-bullets |
+| Quick Takeaways section | Done — numbered PM takeaways summary |
+| Daily cron job | Done — 6 AM UTC via vercel.json |
 
-## Two Commits
+## Four Commits
 1. **Initial release** — full app with all core features, PWA config, 7-day curriculum
 2. **Enhancement round** — localStorage, level-based content, hot tools, diversified quizzes, completion rounds
+3. **Live AI Daily Pulse** — serverless function with Perplexity + Claude, AI Gateway OIDC, cron job, caching
+4. **Pulse UX improvements** — audio listening, bulleted layout, quick takeaways section
 
 ## Next Steps (if continuing)
 - Phase 2: Anthropic & OpenAI interview prep modules
 - Replace Web Speech API with cloud TTS (ElevenLabs/OpenAI) for natural audio
-- Add user accounts + backend for cross-device sync
+- Migrate from localStorage to Supabase for user accounts + cross-device sync
 - Spaced repetition algorithm for quizzes
 - Curate specific YouTube videos instead of search URLs
+- Add push notifications for daily pulse reminders
+- Analytics dashboard for learning progress trends
