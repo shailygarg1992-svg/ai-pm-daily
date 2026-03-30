@@ -126,24 +126,35 @@ const T = {
   warmBg: '#F5F0EA', green: '#16A34A', red: '#DC2626', border: '#E5E7EB',
 };
 
+// ─── localStorage helpers ───────────────────────────────────────
+function loadState(key, fallback) {
+  try { const v = localStorage.getItem('aipm_' + key); return v !== null ? JSON.parse(v) : fallback; }
+  catch { return fallback; }
+}
+function saveState(key, value) {
+  try { localStorage.setItem('aipm_' + key, JSON.stringify(value)); } catch {}
+}
+
 // ─── Level helper ───────────────────────────────────────────────
 function getContentForLevel(briefingItem, level) {
-  // Levels 1-4: basic text + basic example
-  // Levels 5-7: basic text + mix of examples
-  // Levels 8-10: advanced text + advanced example
-  if (level >= 8) {
+  // Levels 1-3: beginner — simple text + simple example
+  // Levels 4-6: intermediate — simple text + advanced example (bridges the gap)
+  // Levels 7-10: advanced — advanced text + advanced example (fully technical)
+  if (level >= 7) {
     return {
       text: briefingItem.advancedText || briefingItem.text,
       example: briefingItem.advancedExample || briefingItem.example,
+      tier: 'advanced',
     };
   }
-  if (level >= 5) {
+  if (level >= 4) {
     return {
       text: briefingItem.text,
       example: briefingItem.advancedExample || briefingItem.example,
+      tier: 'intermediate',
     };
   }
-  return { text: briefingItem.text, example: briefingItem.example };
+  return { text: briefingItem.text, example: briefingItem.example, tier: 'beginner' };
 }
 
 function getLevelLabel(level) {
@@ -154,16 +165,30 @@ function getLevelLabel(level) {
   return 'AI Expert';
 }
 
+function getLevelTierColor(tier) {
+  return tier === 'advanced' ? '#8B5CF6' : tier === 'intermediate' ? '#3B82F6' : '#10B981';
+}
+
+function getLevelTierLabel(tier) {
+  return tier === 'advanced' ? 'Expert Mode' : tier === 'intermediate' ? 'Intermediate' : 'Beginner';
+}
+
 // ─── App ────────────────────────────────────────────────────────
 export default function App() {
-  const [view, setView] = useState('onboarding');
-  const [level, setLevel] = useState(5);
+  const [view, setView] = useState(() => loadState('onboarded', false) ? 'home' : 'onboarding');
+  const [level, setLevel] = useState(() => loadState('level', 5));
   const [selectedDay, setSelectedDay] = useState(0);
-  const [scores, setScores] = useState({});
+  const [scores, setScores] = useState(() => loadState('scores', {}));
+  const [round, setRound] = useState(() => loadState('round', 1)); // track completion rounds
   const [quizAnswers, setQuizAnswers] = useState([]);
   const [currentQ, setCurrentQ] = useState(0);
   const [answered, setAnswered] = useState(false);
   const [selectedOption, setSelectedOption] = useState(null);
+
+  // Persist state changes
+  useEffect(() => { saveState('scores', scores); }, [scores]);
+  useEffect(() => { saveState('level', level); }, [level]);
+  useEffect(() => { saveState('round', round); }, [round]);
 
   const day = DAYS[selectedDay];
   const completedDays = Object.keys(scores).length;
@@ -171,6 +196,7 @@ export default function App() {
     ? (Object.values(scores).reduce((a, b) => a + b, 0) / completedDays).toFixed(1)
     : '-';
   const streak = completedDays;
+  const allComplete = completedDays >= 7;
 
   const openDay = (idx) => { setSelectedDay(idx); setView('briefing'); window.scrollTo(0, 0); };
   const startQuiz = () => {
@@ -195,6 +221,16 @@ export default function App() {
   };
   const goHome = () => { setView('home'); window.scrollTo(0, 0); };
 
+  // Reset for a new round — bump level, clear scores, keep history
+  const startNewRound = () => {
+    const newLevel = Math.min(10, level + 2); // auto-increase difficulty
+    setLevel(newLevel);
+    setScores({});
+    setRound(r => r + 1);
+    setView('home');
+    window.scrollTo(0, 0);
+  };
+
   return (
     <div style={{
       minHeight: '100dvh', background: T.bg,
@@ -209,9 +245,10 @@ export default function App() {
         button:active { opacity: 0.85; }
       `}</style>
       <div style={{ maxWidth: 600, margin: '0 auto', padding: '0 16px', paddingBottom: 120 }}>
-        {view === 'onboarding' && <OnboardingView level={level} setLevel={setLevel} onStart={() => setView('home')} />}
+        {view === 'onboarding' && <OnboardingView level={level} setLevel={setLevel} onStart={() => { saveState('onboarded', true); setView('home'); }} />}
         {view === 'home' && <HomeView scores={scores} streak={streak} avgScore={avgScore}
-          completedDays={completedDays} openDay={openDay} level={level} setLevel={setLevel} />}
+          completedDays={completedDays} openDay={openDay} level={level} setLevel={setLevel}
+          allComplete={allComplete} startNewRound={startNewRound} round={round} />}
         {view === 'briefing' && <BriefingView day={day} dayIdx={selectedDay}
           goHome={goHome} startQuiz={startQuiz} level={level} />}
         {view === 'quiz' && <QuizView day={day} currentQ={currentQ} answered={answered}
@@ -318,7 +355,7 @@ function OnboardingView({ level, setLevel, onStart }) {
 }
 
 // ─── Home View ──────────────────────────────────────────────────
-function HomeView({ scores, streak, avgScore, completedDays, openDay, level, setLevel }) {
+function HomeView({ scores, streak, avgScore, completedDays, openDay, level, setLevel, allComplete, startNewRound, round }) {
   const [showLevel, setShowLevel] = useState(false);
 
   return (
@@ -441,6 +478,49 @@ function HomeView({ scores, streak, avgScore, completedDays, openDay, level, set
           );
         })}
       </div>
+
+      {/* Completion / New Round */}
+      {allComplete && (
+        <div style={{
+          marginTop: 16, background: 'linear-gradient(135deg, #6366F115, #8B5CF615)',
+          border: '1px solid #6366F130', borderRadius: 14, padding: '20px 18px',
+          animation: 'fadeUp 0.45s ease',
+        }}>
+          <div style={{ textAlign: 'center', marginBottom: 14 }}>
+            <div style={{ fontSize: 36, marginBottom: 6 }}>{'\uD83C\uDF89'}</div>
+            <h3 style={{
+              fontFamily: "'Newsreader', 'Georgia', serif",
+              fontSize: 18, fontWeight: 700, margin: '0 0 4px'
+            }}>Phase 1 Complete! Round {round}</h3>
+            <p style={{ fontSize: 13, color: T.sub, margin: 0 }}>
+              Ready for a deeper dive? Start a new round at a higher level.
+            </p>
+          </div>
+          <div style={{
+            background: T.card, borderRadius: 10, padding: '12px 14px', marginBottom: 12,
+            border: `1px solid ${T.border}`,
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
+              <span style={{ color: T.sub }}>Current level</span>
+              <span style={{ fontWeight: 700 }}>{level} — {getLevelLabel(level)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+              <span style={{ color: T.sub }}>Next round level</span>
+              <span style={{ fontWeight: 700, color: '#6366F1' }}>{Math.min(10, level + 2)} — {getLevelLabel(Math.min(10, level + 2))}</span>
+            </div>
+          </div>
+          <button onClick={startNewRound} style={{
+            width: '100%', padding: '14px',
+            background: '#6366F1', color: '#fff', border: 'none',
+            borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: 'pointer',
+          }}>
+            {level >= 9 ? 'Replay at Expert Level \u2192' : `Level Up & Replay (Lv.${Math.min(10, level + 2)}) \u2192`}
+          </button>
+          <p style={{ fontSize: 11, color: T.sub, textAlign: 'center', margin: '8px 0 0' }}>
+            Same topics, deeper content, harder examples. Your scores reset but your knowledge stays.
+          </p>
+        </div>
+      )}
 
       {/* Phase 2 Teaser */}
       <div style={{
@@ -627,6 +707,14 @@ function BriefingView({ day, dayIdx, goHome, startQuiz, level }) {
                   alignItems: 'center', justifyContent: 'center',
                   fontSize: 14, transition: 'all 0.2s', color: T.text,
                 }}>{isActive ? '\u23F9' : '\u25B6'}</button>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                <span style={{
+                  fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4,
+                  background: `${getLevelTierColor(content.tier)}15`,
+                  color: getLevelTierColor(content.tier),
+                  fontFamily: "'JetBrains Mono', monospace", textTransform: 'uppercase',
+                }}>{getLevelTierLabel(content.tier)}</span>
               </div>
               <p style={{ fontSize: 14, lineHeight: 1.7, margin: '0 0 12px', fontWeight: 500 }}>
                 {content.text}
