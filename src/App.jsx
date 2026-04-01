@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { DAYS, HOT_TOOLS, DAY_TOOLS } from './data';
+import { DAYS, HOT_TOOLS, DAY_TOOLS, DAY_VIDEOS } from './data';
 
 // ─── TTS Hook (improved voice selection + natural pausing) ──────
 function useTTS() {
@@ -628,8 +628,147 @@ function HotToolsSection({ dayNum, dayColor }) {
 }
 
 // ─── Briefing View ──────────────────────────────────────────────
+// ─── Agent Chat Panel (iMessage-style) ─────────────────────────
+function AgentChatPanel({ topic, briefingContext, level, dayColor, onClose }) {
+  const [messages, setMessages] = useState([
+    { role: 'agent', text: `Hi! I'm your AI tutor for "${topic}". Ask me anything about this topic.` }
+  ]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const send = async () => {
+    const q = input.trim();
+    if (!q || loading) return;
+    setInput('');
+    setMessages(m => [...m, { role: 'user', text: q }]);
+    setLoading(true);
+    try {
+      const res = await fetch('/api/ask-agent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: q, topic, briefingContext, level }),
+      });
+      const data = await res.json();
+      if (data.answer) {
+        setMessages(m => [...m, { role: 'agent', text: data.answer }]);
+      } else {
+        setMessages(m => [...m, { role: 'agent', text: 'Sorry, I couldn\'t process that. Try rephrasing your question.' }]);
+      }
+    } catch {
+      setMessages(m => [...m, { role: 'agent', text: 'Connection error. Please try again.' }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{
+      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+      background: T.bg, zIndex: 1000,
+      display: 'flex', flexDirection: 'column',
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: '14px 16px', background: dayColor, color: '#fff',
+        display: 'flex', alignItems: 'center', gap: 12,
+        paddingTop: 'env(safe-area-inset-top, 14px)',
+      }}>
+        <button onClick={onClose} style={{
+          background: 'none', border: 'none', color: '#fff',
+          fontSize: 22, cursor: 'pointer', padding: '2px 6px', lineHeight: 1,
+        }}>&larr;</button>
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 700 }}>AI Tutor</div>
+          <div style={{ fontSize: 11, opacity: 0.85 }}>{topic}</div>
+        </div>
+        <div style={{
+          marginLeft: 'auto', width: 8, height: 8, borderRadius: '50%',
+          background: '#4ADE80',
+        }} />
+      </div>
+
+      {/* Messages */}
+      <div style={{
+        flex: 1, overflowY: 'auto', padding: '16px 14px',
+        display: 'flex', flexDirection: 'column', gap: 10,
+      }}>
+        {messages.map((msg, i) => (
+          <div key={i} style={{
+            display: 'flex',
+            justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
+            animation: 'fadeUp 0.25s ease',
+          }}>
+            <div style={{
+              maxWidth: '80%', padding: '10px 14px', borderRadius: 18,
+              fontSize: 14, lineHeight: 1.55,
+              ...(msg.role === 'user' ? {
+                background: dayColor, color: '#fff',
+                borderBottomRightRadius: 4,
+              } : {
+                background: '#F3F4F6', color: T.text,
+                borderBottomLeftRadius: 4,
+              }),
+            }}>
+              {msg.text}
+            </div>
+          </div>
+        ))}
+        {loading && (
+          <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+            <div style={{
+              background: '#F3F4F6', padding: '10px 18px', borderRadius: 18,
+              borderBottomLeftRadius: 4, fontSize: 14, color: T.sub,
+            }}>
+              <span style={{ animation: 'pulse 1.2s ease infinite' }}>Thinking...</span>
+            </div>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input bar */}
+      <div style={{
+        padding: '10px 14px', background: '#fff', borderTop: `1px solid ${T.border}`,
+        display: 'flex', gap: 10, alignItems: 'flex-end',
+        paddingBottom: 'env(safe-area-inset-bottom, 10px)',
+      }}>
+        <input
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send()}
+          placeholder="Ask a question..."
+          style={{
+            flex: 1, padding: '10px 14px', fontSize: 15,
+            border: `1px solid ${T.border}`, borderRadius: 22,
+            outline: 'none', background: '#F9FAFB', color: T.text,
+          }}
+        />
+        <button onClick={send} disabled={loading || !input.trim()} style={{
+          width: 38, height: 38, borderRadius: '50%',
+          background: input.trim() ? dayColor : '#D1D5DB',
+          border: 'none', cursor: input.trim() ? 'pointer' : 'default',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transition: 'all 0.2s', flexShrink: 0,
+        }}>
+          <span style={{ color: '#fff', fontSize: 16, marginTop: -1 }}>{'\u2191'}</span>
+        </button>
+      </div>
+
+      <style>{`@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }`}</style>
+    </div>
+  );
+}
+
+// ─── Briefing View ──────────────────────────────────────────────
 function BriefingView({ day, dayIdx, goHome, startQuiz, level }) {
   const { speaking, currentIdx, speak, speakAll, stop } = useTTS();
+  const [expandedDetails, setExpandedDetails] = useState({});
+  const [chatOpen, setChatOpen] = useState(null); // null or bulletIndex
 
   const getContent = (b) => getContentForLevel(b, level);
 
@@ -647,8 +786,28 @@ function BriefingView({ day, dayIdx, goHome, startQuiz, level }) {
     }
   };
 
+  const toggleDetails = (i) => {
+    setExpandedDetails(prev => ({ ...prev, [i]: !prev[i] }));
+  };
+
+  const videoQuery = DAY_VIDEOS[day.day] || day.theme;
+
   return (
     <div style={{ animation: 'fadeUp 0.45s ease' }}>
+      {/* Agent Chat Overlay */}
+      {chatOpen !== null && (
+        <AgentChatPanel
+          topic={day.theme}
+          briefingContext={day.briefing.map((b, i) => {
+            const c = getContent(b);
+            return `${i + 1}. ${c.text} Example: ${c.example}`;
+          }).join('\n')}
+          level={level}
+          dayColor={day.color}
+          onClose={() => setChatOpen(null)}
+        />
+      )}
+
       <div style={{ padding: '20px 0 10px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={goHome} style={{
           background: 'none', border: 'none', cursor: 'pointer',
@@ -687,6 +846,7 @@ function BriefingView({ day, dayIdx, goHome, startQuiz, level }) {
         {day.briefing.map((b, i) => {
           const isActive = speaking && currentIdx === i;
           const content = getContent(b);
+          const isDetailed = expandedDetails[i];
           return (
             <div key={i} style={{
               background: T.card,
@@ -729,6 +889,102 @@ function BriefingView({ day, dayIdx, goHome, startQuiz, level }) {
                 <p style={{ fontSize: 13, lineHeight: 1.6, margin: 0, color: '#4B5563' }}>
                   {content.example}
                 </p>
+              </div>
+
+              {/* Expanded "More Details" section */}
+              {isDetailed && (
+                <div style={{
+                  marginTop: 12, padding: '14px', background: `${day.color}06`,
+                  borderRadius: 10, border: `1px solid ${day.color}20`,
+                  animation: 'fadeUp 0.3s ease',
+                }}>
+                  {/* Show the other tier content as deeper dive */}
+                  {content.tier !== 'advanced' && (b.advancedText || b.advancedExample) && (
+                    <div style={{ marginBottom: 12 }}>
+                      <div style={{
+                        fontSize: 11, fontWeight: 700, color: day.color, marginBottom: 6,
+                        textTransform: 'uppercase', letterSpacing: '0.5px',
+                        fontFamily: "'JetBrains Mono', monospace",
+                      }}>{'\uD83D\uDD2C'} Technical Deep Dive</div>
+                      {b.advancedText && (
+                        <p style={{ fontSize: 13, lineHeight: 1.65, margin: '0 0 8px', color: T.text }}>
+                          {b.advancedText}
+                        </p>
+                      )}
+                      {b.advancedExample && (
+                        <div style={{
+                          background: '#fff', borderRadius: 8, padding: '10px 12px',
+                          borderLeft: `3px solid #8B5CF6`, marginTop: 6,
+                        }}>
+                          <p style={{ fontSize: 12, lineHeight: 1.55, margin: 0, color: '#4B5563' }}>
+                            {b.advancedExample}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {content.tier === 'advanced' && (
+                    <div style={{ marginBottom: 12 }}>
+                      <div style={{
+                        fontSize: 11, fontWeight: 700, color: '#10B981', marginBottom: 6,
+                        textTransform: 'uppercase', letterSpacing: '0.5px',
+                        fontFamily: "'JetBrains Mono', monospace",
+                      }}>{'\uD83D\uDCA1'} Simple Explanation</div>
+                      <p style={{ fontSize: 13, lineHeight: 1.65, margin: '0 0 8px', color: T.text }}>
+                        {b.text}
+                      </p>
+                      <div style={{
+                        background: '#fff', borderRadius: 8, padding: '10px 12px',
+                        borderLeft: '3px solid #10B981', marginTop: 6,
+                      }}>
+                        <p style={{ fontSize: 12, lineHeight: 1.55, margin: 0, color: '#4B5563' }}>
+                          {b.example}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {/* Video link */}
+                  <a
+                    href={`https://www.youtube.com/results?search_query=${encodeURIComponent(videoQuery + ' bullet ' + (i + 1))}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 8,
+                      padding: '10px 14px', background: '#FF0000', color: '#fff',
+                      borderRadius: 10, textDecoration: 'none', fontSize: 13, fontWeight: 600,
+                    }}
+                  >
+                    <span style={{ fontSize: 18 }}>{'\u25B6\uFE0F'}</span>
+                    Watch a Short Video on This Topic
+                  </a>
+                </div>
+              )}
+
+              {/* Action buttons */}
+              <div style={{
+                display: 'flex', gap: 8, marginTop: 12,
+              }}>
+                <button onClick={() => toggleDetails(i)} style={{
+                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  padding: '10px 12px', fontSize: 12, fontWeight: 600,
+                  background: isDetailed ? `${day.color}12` : '#F3F4F6',
+                  color: isDetailed ? day.color : T.sub,
+                  border: `1px solid ${isDetailed ? day.color + '30' : 'transparent'}`,
+                  borderRadius: 10, cursor: 'pointer', transition: 'all 0.2s',
+                }}>
+                  <span style={{ fontSize: 14 }}>{'\uD83D\uDCD6'}</span>
+                  {isDetailed ? 'Less Details' : 'More Details'}
+                </button>
+                <button onClick={() => setChatOpen(i)} style={{
+                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  padding: '10px 12px', fontSize: 12, fontWeight: 600,
+                  background: `${day.color}10`, color: day.color,
+                  border: `1px solid ${day.color}25`,
+                  borderRadius: 10, cursor: 'pointer', transition: 'all 0.2s',
+                }}>
+                  <span style={{ fontSize: 14 }}>{'\uD83D\uDCAC'}</span>
+                  Ask an Agent
+                </button>
               </div>
             </div>
           );

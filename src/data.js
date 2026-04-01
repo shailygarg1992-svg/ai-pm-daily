@@ -93,6 +93,17 @@ export const DAY_TOOLS = {
   7: [0, 1, 2, 3, 4, 8, 9], // All builder tools (playbook day)
 };
 
+// YouTube video search queries per day topic for "Learn More" feature
+export const DAY_VIDEOS = {
+  1: "AI agents explained for product managers 2025",
+  2: "how large language models work explained simply",
+  3: "RAG vs fine tuning vs prompt engineering explained",
+  4: "AI product metrics KPIs for product managers",
+  5: "AI safety and responsible AI for product teams",
+  6: "multimodal AI vision speech explained",
+  7: "AI native product management playbook",
+};
+
 export const DAYS = [
   {
     day: 1,
