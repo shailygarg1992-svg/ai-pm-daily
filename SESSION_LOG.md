@@ -63,7 +63,7 @@
 
 ### 6. Deployment
 - Initialized git repo
-- Created GitHub repo: `shailygarg1992-svg/ai-pm-daily` (public)
+- Created GitHub repo: `shailygarg1992/ai-pm-daily` (public)
 - Deployed to Vercel production: **https://ai-pm-daily.vercel.app**
 - Connected GitHub for auto-deploy on push
 

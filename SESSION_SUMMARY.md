@@ -4,7 +4,7 @@
 A mobile-first progressive web app (PWA) that delivers 5-minute daily AI briefings for product managers. Built from a detailed PRD in a single session and deployed live.
 
 **Live URL**: https://ai-pm-daily.vercel.app
-**GitHub**: https://github.com/shailygarg1992-svg/ai-pm-daily
+**GitHub**: https://github.com/shailygarg1992/ai-pm-daily
 
 ## Key Features
 - **7-day AI curriculum** with 5 briefing bullets + 5 quiz questions per day
@@ -44,7 +44,7 @@ A mobile-first progressive web app (PWA) that delivers 5-minute daily AI briefin
 | Better TTS audio | Done — sentence-level pausing, better voice selection |
 | Persist state on refresh | Done — localStorage |
 | Content refresh after completion | Done — "Level Up & Replay" at higher difficulty |
-| Push to GitHub | Done — `shailygarg1992-svg/ai-pm-daily` |
+| Push to GitHub | Done — `shailygarg1992/ai-pm-daily` |
 | Deploy to Vercel | Done — `ai-pm-daily.vercel.app` |
 | Live AI Daily Pulse | Done — Perplexity + Claude pipeline via AI Gateway |
 | Audio for Daily Pulse | Done — Listen to Pulse button with TTS |
