@@ -104,6 +104,35 @@ export const DAY_VIDEOS = {
   7: "AI native product management playbook",
 };
 
+// Companies for Interview Prep section
+export const COMPANIES = [
+  { id: 'anthropic', name: 'Anthropic', emoji: '\uD83E\uDDE0', color: '#D97706', tagline: 'AI Safety & Claude' },
+  { id: 'openai', name: 'OpenAI', emoji: '\uD83E\uDD16', color: '#10A37F', tagline: 'GPT & ChatGPT' },
+  { id: 'google', name: 'Google DeepMind', emoji: '\uD83D\uDD0D', color: '#4285F4', tagline: 'Gemini & Search AI' },
+  { id: 'meta', name: 'Meta AI', emoji: '\uD83D\uDCAC', color: '#1877F2', tagline: 'Llama & Social AI' },
+  { id: 'microsoft', name: 'Microsoft', emoji: '\u2601\uFE0F', color: '#00A4EF', tagline: 'Copilot & Azure AI' },
+  { id: 'amazon', name: 'Amazon', emoji: '\uD83D\uDCE6', color: '#FF9900', tagline: 'Bedrock & Alexa AI' },
+];
+
+// Section definitions for sidebar navigation
+export const SECTIONS = [
+  { id: 'fundamentals', name: 'AI Fundamentals', emoji: '\uD83D\uDCDA', color: '#6366F1', desc: '7-day core AI curriculum' },
+  { id: 'advanced', name: 'Advanced Topics', emoji: '\uD83D\uDE80', color: '#8B5CF6', desc: 'AI-generated chapters based on your gaps' },
+  { id: 'interview', name: 'Interview Prep', emoji: '\uD83C\uDFAF', color: '#F59E0B', desc: 'Company-specific AI PM prep' },
+  { id: 'pulse', name: 'Daily Pulse', emoji: '\u26A1', color: '#EF4444', desc: 'Live AI news & insights' },
+];
+
+// Quiz topic tags for tracking weak areas
+export const TOPIC_TAGS = {
+  0: ['agents', 'multi-agent', 'tool-calling', 'permissions', 'trust'],
+  1: ['llm', 'transformers', 'tokens', 'context-window', 'fine-tuning'],
+  2: ['rag', 'embeddings', 'prompting', 'fine-tuning', 'retrieval'],
+  3: ['metrics', 'evaluation', 'hallucination', 'latency', 'cost'],
+  4: ['safety', 'bias', 'governance', 'regulation', 'alignment'],
+  5: ['multimodal', 'vision', 'speech', 'video', 'generation'],
+  6: ['pm-playbook', 'roadmap', 'stakeholders', 'ai-native', 'strategy'],
+};
+
 export const DAYS = [
   {
     day: 1,
