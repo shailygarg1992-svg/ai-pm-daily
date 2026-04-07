@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI PM Daily — Analytics</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', -apple-system, sans-serif; background: #0F172A; color: #E2E8F0; min-height: 100vh; }
+  .container { max-width: 960px; margin: 0 auto; padding: 24px 16px 60px; }
+  h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+  .subtitle { color: #94A3B8; font-size: 13px; margin-bottom: 24px; }
+  .period { color: #94A3B8; font-size: 12px; font-family: 'JetBrains Mono', monospace; margin-bottom: 20px; }
+
+  /* Auth */
+  .auth-bar { display: flex; gap: 8px; margin-bottom: 20px; }
+  .auth-bar input { flex: 1; padding: 10px 14px; border-radius: 10px; border: 1px solid #334155; background: #1E293B; color: #E2E8F0; font-size: 13px; outline: none; }
+  .auth-bar input:focus { border-color: #6366F1; }
+  .auth-bar button { padding: 10px 20px; border-radius: 10px; border: none; background: #6366F1; color: #fff; font-weight: 600; font-size: 13px; cursor: pointer; }
+  .auth-bar button:hover { background: #4F46E5; }
+  .auth-bar select { padding: 10px 14px; border-radius: 10px; border: 1px solid #334155; background: #1E293B; color: #E2E8F0; font-size: 13px; }
+
+  /* Stat cards */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .stat { background: #1E293B; border: 1px solid #334155; border-radius: 14px; padding: 18px 16px; }
+  .stat-value { font-size: 28px; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: #F8FAFC; }
+  .stat-label { font-size: 11px; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; font-weight: 600; }
+  .stat.accent .stat-value { color: #818CF8; }
+  .stat.green .stat-value { color: #4ADE80; }
+  .stat.amber .stat-value { color: #FBBF24; }
+  .stat.rose .stat-value { color: #FB7185; }
+
+  /* Sections */
+  .section { margin-bottom: 24px; }
+  .section-title { font-size: 14px; font-weight: 700; color: #CBD5E1; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* Bar chart */
+  .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 140px; padding: 12px 0; }
+  .bar-group { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .bar { width: 100%; min-width: 24px; border-radius: 6px 6px 0 0; transition: height 0.4s ease; position: relative; }
+  .bar.events { background: linear-gradient(180deg, #818CF8, #6366F1); }
+  .bar.users { background: linear-gradient(180deg, #4ADE80, #16A34A); }
+  .bar-label { font-size: 10px; color: #64748B; font-family: 'JetBrains Mono', monospace; }
+  .bar-value { font-size: 10px; color: #CBD5E1; font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+  .chart-legend { display: flex; gap: 16px; margin-top: 8px; }
+  .chart-legend span { font-size: 11px; color: #94A3B8; display: flex; align-items: center; gap: 4px; }
+  .chart-legend .dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* Event breakdown */
+  .event-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; }
+  .event-card { background: #1E293B; border: 1px solid #334155; border-radius: 10px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; }
+  .event-name { font-size: 12px; color: #CBD5E1; font-weight: 500; }
+  .event-count { font-size: 16px; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: #818CF8; }
+  .event-dot { width: 6px; height: 6px; border-radius: 50%; margin-right: 6px; display: inline-block; }
+
+  /* User table */
+  .user-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+  .user-table th { text-align: left; font-size: 11px; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 12px; border-bottom: 1px solid #334155; font-weight: 600; }
+  .user-table td { font-size: 13px; padding: 10px 12px; border-bottom: 1px solid #1E293B; }
+  .user-table tr:hover td { background: #1E293B; }
+  .fp { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #94A3B8; }
+  .ip { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #64748B; }
+
+  /* Recent events */
+  .event-list { display: flex; flex-direction: column; gap: 6px; }
+  .event-item { background: #1E293B; border: 1px solid #334155; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; font-size: 12px; }
+  .event-time { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #64748B; white-space: nowrap; }
+  .event-tag { padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+  .event-tag.session_start { background: #312E81; color: #A5B4FC; }
+  .event-tag.navigate { background: #1E3A5F; color: #7DD3FC; }
+  .event-tag.open_day { background: #134E4A; color: #5EEAD4; }
+  .event-tag.quiz_complete { background: #365314; color: #BEF264; }
+  .event-tag.ask_agent { background: #4C1D95; color: #C4B5FD; }
+  .event-tag.generate_chapter { background: #7C2D12; color: #FDBA74; }
+  .event-tag.interview_prep { background: #831843; color: #F9A8D4; }
+  .event-detail { color: #94A3B8; flex: 1; }
+
+  .loading { text-align: center; padding: 60px; color: #64748B; }
+  .error { background: #2D1B1B; border: 1px solid #7F1D1D; border-radius: 12px; padding: 16px; color: #FCA5A5; font-size: 13px; margin-bottom: 16px; }
+  .empty { text-align: center; padding: 40px; color: #475569; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>AI PM Daily Analytics</h1>
+  <p class="subtitle">Anonymous usage tracking dashboard</p>
+
+  <div class="auth-bar">
+    <input type="password" id="keyInput" placeholder="Analytics key (leave blank if not set)">
+    <select id="daysSelect">
+      <option value="7">7 days</option>
+      <option value="14">14 days</option>
+      <option value="30">30 days</option>
+      <option value="3">3 days</option>
+      <option value="1">Today</option>
+    </select>
+    <button onclick="loadData()">Load</button>
+  </div>
+
+  <div id="content"><div class="loading">Click Load to fetch analytics...</div></div>
+</div>
+
+<script>
+async function loadData() {
+  const key = document.getElementById('keyInput').value;
+  const days = document.getElementById('daysSelect').value;
+  const content = document.getElementById('content');
+  content.innerHTML = '<div class="loading">Loading...</div>';
+
+  try {
+    const params = new URLSearchParams({ days });
+    if (key) params.set('key', key);
+    const res = await fetch('/api/analytics?' + params.toString());
+    if (!res.ok) {
+      const err = await res.json();
+      content.innerHTML = `<div class="error">${err.error || 'Failed to load'}</div>`;
+      return;
+    }
+    const data = await res.json();
+    render(data);
+  } catch (e) {
+    content.innerHTML = `<div class="error">Network error: ${e.message}</div>`;
+  }
+}
+
+function render(data) {
+  const content = document.getElementById('content');
+
+  if (data.totalEvents === 0) {
+    content.innerHTML = `
+      <p class="period">${data.period}</p>
+      <div class="empty">No events recorded yet. Usage data will appear once users start interacting with the app.</div>
+    `;
+    return;
+  }
+
+  const aiEvents = (data.eventBreakdown.ask_agent || 0) + (data.eventBreakdown.generate_chapter || 0) + (data.eventBreakdown.interview_prep || 0);
+
+  // Daily chart
+  const dailyEntries = Object.entries(data.daily).sort((a, b) => a[0].localeCompare(b[0]));
+  const maxEvents = Math.max(...dailyEntries.map(d => d[1].events), 1);
+  const maxUsers = Math.max(...dailyEntries.map(d => d[1].uniqueUsers), 1);
+
+  const barsHTML = dailyEntries.map(([date, d]) => {
+    const evH = Math.max(4, (d.events / maxEvents) * 110);
+    const usH = Math.max(4, (d.uniqueUsers / maxUsers) * 110);
+    const label = date.slice(5); // MM-DD
+    return `
+      <div class="bar-group">
+        <div class="bar-value">${d.events}</div>
+        <div style="display:flex;gap:3px;align-items:flex-end;width:100%;height:110px">
+          <div class="bar events" style="height:${evH}px;flex:1"></div>
+          <div class="bar users" style="height:${usH}px;flex:1"></div>
+        </div>
+        <div class="bar-label">${label}</div>
+      </div>
+    `;
+  }).join('');
+
+  // Event breakdown
+  const eventColors = {
+    session_start: '#818CF8', navigate: '#7DD3FC', open_day: '#5EEAD4',
+    quiz_complete: '#BEF264', ask_agent: '#C4B5FD', generate_chapter: '#FDBA74', interview_prep: '#F9A8D4'
+  };
+  const eventsHTML = Object.entries(data.eventBreakdown)
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, count]) => `
+      <div class="event-card">
+        <div class="event-name"><span class="event-dot" style="background:${eventColors[name] || '#64748B'}"></span>${name.replace(/_/g, ' ')}</div>
+        <div class="event-count">${count}</div>
+      </div>
+    `).join('');
+
+  // Users table
+  const users = Object.entries(data.users)
+    .sort((a, b) => b[1].events - a[1].events)
+    .slice(0, 20);
+  const usersHTML = users.map(([fp, u], i) => `
+    <tr>
+      <td style="color:#64748B;font-weight:600">${i + 1}</td>
+      <td><span class="fp">${fp.slice(0, 8)}...</span></td>
+      <td><span class="ip">${u.ip}</span></td>
+      <td style="font-family:'JetBrains Mono',monospace;font-weight:600;color:#818CF8">${u.events}</td>
+      <td class="event-time">${new Date(u.lastSeen).toLocaleString()}</td>
+    </tr>
+  `).join('');
+
+  // Recent events
+  const recentHTML = (data.recentEvents || []).map(e => {
+    const time = new Date(e.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const date = new Date(e.ts).toLocaleDateString([], { month: 'short', day: 'numeric' });
+    const extra = e.day !== undefined ? `Day ${e.day}` :
+                  e.section ? e.section :
+                  e.topic ? e.topic :
+                  e.company ? e.company :
+                  e.score !== undefined ? `Score: ${e.score}/5` : '';
+    return `
+      <div class="event-item">
+        <span class="event-time">${date} ${time}</span>
+        <span class="event-tag ${e.event}">${e.event.replace(/_/g, ' ')}</span>
+        <span class="event-detail">${extra}</span>
+        <span class="fp">${(e.fingerprint || '').slice(0, 8)}</span>
+      </div>
+    `;
+  }).join('');
+
+  content.innerHTML = `
+    <p class="period">${data.period}</p>
+
+    <div class="stats">
+      <div class="stat accent"><div class="stat-value">${data.totalEvents}</div><div class="stat-label">Total Events</div></div>
+      <div class="stat green"><div class="stat-value">${data.uniqueUsers}</div><div class="stat-label">Unique Users</div></div>
+      <div class="stat amber"><div class="stat-value">${data.uniqueIPs}</div><div class="stat-label">Unique IPs</div></div>
+      <div class="stat rose"><div class="stat-value">${aiEvents}</div><div class="stat-label">AI Requests</div></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Daily Activity</div>
+      <div style="background:#1E293B;border:1px solid #334155;border-radius:14px;padding:16px">
+        <div class="bar-chart">${barsHTML}</div>
+        <div class="chart-legend">
+          <span><span class="dot" style="background:#6366F1"></span> Events</span>
+          <span><span class="dot" style="background:#16A34A"></span> Users</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Event Breakdown</div>
+      <div class="event-grid">${eventsHTML}</div>
+    </div>
+
+    ${users.length > 0 ? `
+    <div class="section">
+      <div class="section-title">Top Users</div>
+      <div style="background:#1E293B;border:1px solid #334155;border-radius:14px;overflow:hidden">
+        <table class="user-table">
+          <thead><tr><th>#</th><th>Fingerprint</th><th>IP</th><th>Events</th><th>Last Seen</th></tr></thead>
+          <tbody>${usersHTML}</tbody>
+        </table>
+      </div>
+    </div>` : ''}
+
+    <div class="section">
+      <div class="section-title">Recent Events</div>
+      <div class="event-list">${recentHTML || '<div class="empty">No recent events</div>'}</div>
+    </div>
+  `;
+}
+
+// Auto-load on page load
+window.addEventListener('DOMContentLoaded', () => loadData());
+</script>
+</body>
+</html>
