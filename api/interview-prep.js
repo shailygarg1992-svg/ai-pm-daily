@@ -1,5 +1,6 @@
 import { generateText } from 'ai';
 import { gateway } from 'ai';
+import { checkRateLimit, getRateLimitHeaders } from './_rateLimit.js';
 
 export const config = {
   maxDuration: 60,
@@ -18,15 +19,21 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
+  // Skip rate limit for cached responses
+  const { company, level } = req.body || {};
+  const cacheKey = `${company}_${level || 5}`;
+  if (cache[cacheKey] && (Date.now() - cache[cacheKey].at) < CACHE_TTL) {
+    return res.status(200).json(cache[cacheKey].data);
+  }
+
+  const rl = checkRateLimit(req);
+  for (const [k, v] of Object.entries(getRateLimitHeaders(rl))) res.setHeader(k, v);
+  if (!rl.allowed) {
+    return res.status(429).json({ error: 'Daily limit reached (20 AI requests/day). Try again tomorrow!', remaining: 0 });
+  }
+
   try {
-    const { company, level } = req.body;
-
     if (!company) return res.status(400).json({ error: 'Missing company' });
-
-    const cacheKey = `${company}_${level || 5}`;
-    if (cache[cacheKey] && (Date.now() - cache[cacheKey].at) < CACHE_TTL) {
-      return res.status(200).json(cache[cacheKey].data);
-    }
 
     const tierLabel = level >= 7 ? 'expert (technical depth, system design)' :
                       level >= 4 ? 'intermediate (product sense, practical)' :

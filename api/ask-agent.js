@@ -1,5 +1,6 @@
 import { generateText } from 'ai';
 import { gateway } from 'ai';
+import { checkRateLimit, getRateLimitHeaders } from './_rateLimit.js';
 
 export const config = {
   maxDuration: 30,
@@ -16,6 +17,12 @@ export default async function handler(req, res) {
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const rl = checkRateLimit(req);
+  for (const [k, v] of Object.entries(getRateLimitHeaders(rl))) res.setHeader(k, v);
+  if (!rl.allowed) {
+    return res.status(429).json({ error: 'Daily limit reached (20 AI requests/day). Try again tomorrow!', remaining: 0 });
   }
 
   try {

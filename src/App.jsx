@@ -92,6 +92,41 @@ function saveState(key, value) {
   try { localStorage.setItem('aipm_' + key, JSON.stringify(value)); } catch {}
 }
 
+// ─── Anonymous Fingerprint & Tracking ───────────────────────────
+function getFingerprint() {
+  let fp = loadState('fingerprint', null);
+  if (!fp) { fp = crypto.randomUUID(); saveState('fingerprint', fp); }
+  return fp;
+}
+
+function track(event, data = {}) {
+  try {
+    fetch('/api/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event, fingerprint: getFingerprint(), data }),
+    }).catch(() => {}); // fire-and-forget
+  } catch {}
+}
+
+// ─── Client-side Rate Limit ─────────────────────────────────────
+const DAILY_AI_LIMIT = 20;
+function getAIUsageToday() {
+  const dateKey = new Date().toISOString().slice(0, 10);
+  const usage = loadState('aiUsage', { date: '', count: 0 });
+  if (usage.date !== dateKey) return 0;
+  return usage.count;
+}
+function incrementAIUsage() {
+  const dateKey = new Date().toISOString().slice(0, 10);
+  const usage = loadState('aiUsage', { date: '', count: 0 });
+  if (usage.date !== dateKey) { saveState('aiUsage', { date: dateKey, count: 1 }); return 1; }
+  usage.count++;
+  saveState('aiUsage', usage);
+  return usage.count;
+}
+function canUseAI() { return getAIUsageToday() < DAILY_AI_LIMIT; }
+
 // ─── Level helpers ──────────────────────────────────────────────
 function getContentForLevel(briefingItem, level) {
   if (level >= 7) return { text: briefingItem.advancedText || briefingItem.text, example: briefingItem.advancedExample || briefingItem.example, tier: 'advanced' };
@@ -160,6 +195,9 @@ export default function App() {
   const allComplete = completedDays >= 7;
   const xpInfo = getXPLevel(xp);
 
+  // Track session start (once per page load)
+  useEffect(() => { track('session_start', { level, xp, section: activeSection }); }, []); // eslint-disable-line
+
   // Get weak topics from quiz history
   const getWeakTopics = () => {
     const wrongByTopic = {};
@@ -171,7 +209,7 @@ export default function App() {
     return Object.entries(wrongByTopic).sort((a, b) => b[1] - a[1]).slice(0, 5).map(e => e[0]);
   };
 
-  const openDay = (idx) => { setSelectedDay(idx); setView('briefing'); window.scrollTo(0, 0); };
+  const openDay = (idx) => { setSelectedDay(idx); setView('briefing'); track('open_day', { day: idx }); window.scrollTo(0, 0); };
   const startQuiz = () => {
     setQuizAnswers([]); setCurrentQ(0);
     setAnswered(false); setSelectedOption(null);
@@ -199,6 +237,7 @@ export default function App() {
       } else {
         setScores(prev => ({ ...prev, [selectedDay]: finalScore }));
       }
+      track('quiz_complete', { day: selectedDay, score: finalScore, xpEarned: earnedXP });
       setView('results'); window.scrollTo(0, 0);
     }
   };
@@ -212,6 +251,7 @@ export default function App() {
   const navigate = (section) => {
     setActiveSection(section);
     setSidebarOpen(false);
+    track('navigate', { section });
     if (section === 'fundamentals' || section === 'advanced' || section === 'interview' || section === 'pulse') {
       setView('home');
     }
@@ -284,6 +324,13 @@ export default function App() {
               fontSize: 12, fontWeight: 700, color: T.accent,
               fontFamily: "'JetBrains Mono', monospace",
             }}>Lv.{level}</div>
+            <div style={{
+              background: getAIUsageToday() >= DAILY_AI_LIMIT ? '#FEE2E2' : '#ECFDF5',
+              padding: '4px 8px', borderRadius: 12,
+              fontSize: 10, fontWeight: 600,
+              color: getAIUsageToday() >= DAILY_AI_LIMIT ? T.red : '#059669',
+              fontFamily: "'JetBrains Mono', monospace",
+            }}>{DAILY_AI_LIMIT - getAIUsageToday()} AI</div>
           </div>
         </div>
       )}
@@ -559,9 +606,12 @@ function AdvancedSection({ generatedChapters, setGeneratedChapters, genScores, o
   const [genError, setGenError] = useState(null);
 
   const generateNewChapter = async () => {
+    if (!canUseAI()) { setGenError('Daily AI limit reached (20/day). Try again tomorrow!'); return; }
     setGenerating(true); setGenError(null);
     try {
       const topics = weakTopics.length > 0 ? weakTopics : ['agents', 'llm', 'prompting', 'metrics', 'safety'];
+      incrementAIUsage();
+      track('generate_chapter', { topics, level });
       const res = await fetch('/api/generate-chapter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -572,6 +622,7 @@ function AdvancedSection({ generatedChapters, setGeneratedChapters, genScores, o
           chapterNumber: 8 + generatedChapters.length,
         }),
       });
+      if (res.status === 429) { const d = await res.json(); throw new Error(d.error); }
       if (!res.ok) throw new Error(`${res.status}`);
       const chapter = await res.json();
       setGeneratedChapters(prev => [...prev, chapter]);
@@ -685,12 +736,16 @@ function InterviewPrepSection({ level, progress, setProgress, xp, setXP }) {
       setCompanyData(cached.data); setLoading(false);
       return;
     }
+    if (!canUseAI()) { setError('Daily AI limit reached (20/day). Try again tomorrow!'); setLoading(false); return; }
     try {
+      incrementAIUsage();
+      track('interview_prep', { company: company.id, level });
       const res = await fetch('/api/interview-prep', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ company: company.id, level }),
       });
+      if (res.status === 429) { const d = await res.json(); throw new Error(d.error); }
       if (!res.ok) throw new Error(`${res.status}`);
       const data = await res.json();
       setCompanyData(data);
@@ -1080,14 +1135,21 @@ function AgentChatPanel({ topic, briefingContext, level, dayColor, onClose }) {
 
   const send = async () => {
     const q = input.trim(); if (!q || loading) return;
+    if (!canUseAI()) {
+      setMessages(m => [...m, { role: 'user', text: q }, { role: 'agent', text: 'You\'ve hit the daily limit (20 AI requests). Come back tomorrow for more learning!' }]);
+      setInput(''); return;
+    }
     setInput('');
     setMessages(m => [...m, { role: 'user', text: q }]);
     setLoading(true);
+    incrementAIUsage();
+    track('ask_agent', { topic });
     try {
       const res = await fetch('/api/ask-agent', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: q, topic, briefingContext, level }),
       });
+      if (res.status === 429) { const d = await res.json(); setMessages(m => [...m, { role: 'agent', text: d.error }]); return; }
       const data = await res.json();
       setMessages(m => [...m, { role: 'agent', text: data.answer || 'Sorry, try rephrasing your question.' }]);
     } catch { setMessages(m => [...m, { role: 'agent', text: 'Connection error. Please try again.' }]); }
