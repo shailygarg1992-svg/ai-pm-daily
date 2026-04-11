@@ -133,6 +133,28 @@ function getContentForLevel(briefingItem, level) {
   if (level >= 4) return { text: briefingItem.text, example: briefingItem.advancedExample || briefingItem.example, tier: 'intermediate' };
   return { text: briefingItem.text, example: briefingItem.example, tier: 'beginner' };
 }
+function getQuizForLevel(q, level) {
+  if (!q) return q;
+  if (level >= 7 && q.advancedQuestion) {
+    return {
+      ...q,
+      question: q.advancedQuestion,
+      options: q.advancedOptions || q.options,
+      answer: q.advancedAnswer !== undefined ? q.advancedAnswer : q.answer,
+      learnLinks: q.advancedLearnLinks || q.learnLinks,
+    };
+  }
+  if (level >= 4 && q.intermediateQuestion) {
+    return {
+      ...q,
+      question: q.intermediateQuestion,
+      options: q.intermediateOptions || q.options,
+      answer: q.intermediateAnswer !== undefined ? q.intermediateAnswer : q.answer,
+      learnLinks: q.intermediateLearnLinks || q.learnLinks,
+    };
+  }
+  return q;
+}
 function getLevelLabel(level) {
   if (level <= 2) return 'AI Curious'; if (level <= 4) return 'AI Aware';
   if (level <= 6) return 'AI Competent'; if (level <= 8) return 'AI Proficient'; return 'AI Expert';
@@ -220,7 +242,7 @@ export default function App() {
     setSelectedOption(optIdx); setAnswered(true);
     setQuizAnswers(prev => [...prev, optIdx]);
     // Track quiz history for adaptive learning
-    const isCorrect = optIdx === day.quiz[currentQ].answer;
+    const isCorrect = optIdx === getQuizForLevel(day.quiz[currentQ], level).answer;
     const dayIdx = selectedDay < 100 ? selectedDay : null;
     const topics = dayIdx !== null ? (TOPIC_TAGS[dayIdx] || []) : (day.basedOn || []);
     setQuizHistory(prev => [...prev.slice(-99), { dayIdx: selectedDay, qIdx: currentQ, correct: isCorrect, topics, date: new Date().toISOString() }]);
@@ -229,7 +251,7 @@ export default function App() {
     if (currentQ < 4) {
       setCurrentQ(c => c + 1); setAnswered(false); setSelectedOption(null);
     } else {
-      const finalScore = quizAnswers.reduce((acc, ans, i) => acc + (ans === day.quiz[i].answer ? 1 : 0), 0);
+      const finalScore = quizAnswers.reduce((acc, ans, i) => acc + (ans === getQuizForLevel(day.quiz[i], level).answer ? 1 : 0), 0);
       const earnedXP = calcXP(finalScore);
       setXP(prev => prev + earnedXP);
       if (selectedDay >= 100) {
@@ -352,9 +374,9 @@ export default function App() {
         )}
         {view === 'home' && activeSection === 'pulse' && <DailyPulseSection />}
         {view === 'briefing' && <BriefingView day={day} dayIdx={selectedDay} goHome={goHome} startQuiz={startQuiz} level={level} />}
-        {view === 'quiz' && <QuizView day={day} currentQ={currentQ} answered={answered}
+        {view === 'quiz' && <QuizView day={day} currentQ={currentQ} answered={answered} level={level}
           selectedOption={selectedOption} answerQuestion={answerQuestion} nextQuestion={nextQuestion} goHome={goHome} />}
-        {view === 'results' && <ResultsView day={day} dayIdx={selectedDay}
+        {view === 'results' && <ResultsView day={day} dayIdx={selectedDay} level={level}
           quizAnswers={quizAnswers} scores={selectedDay >= 100 ? genScores : scores}
           scoreKey={selectedDay >= 100 ? selectedDay - 100 : selectedDay}
           goHome={goHome} openDay={openDay} xpEarned={calcXP(selectedDay >= 100 ? (genScores[selectedDay - 100] || 0) : (scores[selectedDay] || 0))} />}
@@ -1358,8 +1380,8 @@ function BriefingView({ day, dayIdx, goHome, startQuiz, level }) {
 }
 
 // ─── Quiz View ──────────────────────────────────────────────────
-function QuizView({ day, currentQ, answered, selectedOption, answerQuestion, nextQuestion, goHome }) {
-  const q = day.quiz[currentQ];
+function QuizView({ day, currentQ, answered, selectedOption, answerQuestion, nextQuestion, goHome, level }) {
+  const q = getQuizForLevel(day.quiz[currentQ], level);
   const letters = ['A', 'B', 'C', 'D'];
   const dayColor = day.color || '#6366F1';
 
@@ -1420,11 +1442,14 @@ function QuizView({ day, currentQ, answered, selectedOption, answerQuestion, nex
 }
 
 // ─── Results View ───────────────────────────────────────────────
-function ResultsView({ day, dayIdx, quizAnswers, scores, scoreKey, goHome, openDay, xpEarned }) {
+function ResultsView({ day, dayIdx, quizAnswers, scores, scoreKey, goHome, openDay, xpEarned, level }) {
   const score = scores[scoreKey] || 0;
   const emoji = score >= 4 ? '\uD83C\uDFC6' : score >= 3 ? '\uD83D\uDCAA' : '\uD83D\uDCDA';
   const message = score === 5 ? 'Perfect score! You nailed it!' : score >= 4 ? 'Excellent work!' : score >= 3 ? 'Good job! A few more to review.' : 'Keep learning!';
-  const results = day.quiz.map((q, i) => ({ ...q, userAnswer: quizAnswers[i], index: i, isCorrect: quizAnswers[i] === q.answer }));
+  const results = day.quiz.map((rawQ, i) => {
+    const q = getQuizForLevel(rawQ, level);
+    return { ...q, userAnswer: quizAnswers[i], index: i, isCorrect: quizAnswers[i] === q.answer };
+  });
   const nextDayIdx = dayIdx < 6 ? dayIdx + 1 : null;
   const [showCorrect, setShowCorrect] = useState(false);
   const dayColor = day.color || '#6366F1';

@@ -112,6 +112,7 @@ export const COMPANIES = [
   { id: 'meta', name: 'Meta AI', emoji: '\uD83D\uDCAC', color: '#1877F2', tagline: 'Llama & Social AI' },
   { id: 'microsoft', name: 'Microsoft', emoji: '\u2601\uFE0F', color: '#00A4EF', tagline: 'Copilot & Azure AI' },
   { id: 'amazon', name: 'Amazon', emoji: '\uD83D\uDCE6', color: '#FF9900', tagline: 'Bedrock & Alexa AI' },
+  { id: 'uber', name: 'Uber', emoji: '\uD83D\uDE97', color: '#000000', tagline: 'Marketplace & Mobility AI' },
 ];
 
 // Section definitions for sidebar navigation
@@ -181,6 +182,14 @@ export const DAYS = [
           "Agents can only work with text, chatbots handle images too"
         ],
         answer: 2,
+        advancedQuestion: "Which architectural property most distinguishes an AI agent from a standard LLM chat completion?",
+        advancedOptions: [
+          "Larger context window and higher token limits",
+          "A ReAct-style observe-reason-act loop with persistent state across tool calls",
+          "Use of RLHF fine-tuning instead of base pretraining",
+          "A higher temperature setting at inference time"
+        ],
+        advancedAnswer: 1,
         learnLinks: [
           { title: "AI Agents Explained in 5 Minutes", url: "https://www.youtube.com/results?search_query=AI+agents+explained+simply&sp=EgIYAQ%253D%253D" }
         ]
@@ -194,6 +203,14 @@ export const DAYS = [
           "Users manually assign tasks to each agent"
         ],
         answer: 0,
+        advancedQuestion: "In a supervisor-worker multi-agent architecture, the supervisor's primary job is to:",
+        advancedOptions: [
+          "Generate the final output directly, bypassing worker agents",
+          "Decompose the task, route subtasks to specialized workers, and aggregate results",
+          "Run tool calls in parallel without any planning",
+          "Fine-tune the worker models at runtime"
+        ],
+        advancedAnswer: 1,
         learnLinks: [
           { title: "Multi-Agent AI Systems Explained", url: "https://www.youtube.com/results?search_query=multi+agent+AI+systems+explained&sp=EgIYAQ%253D%253D" }
         ]
@@ -207,6 +224,14 @@ export const DAYS = [
           "Designing agent behaviors and permission models"
         ],
         answer: 3,
+        advancedQuestion: "When defining a tool schema for an agent, which design choice has the biggest impact on reliability?",
+        advancedOptions: [
+          "Using the shortest possible tool name",
+          "Tightly typed input schemas with clear descriptions and constrained enums",
+          "Avoiding any required parameters so the model has flexibility",
+          "Returning free-form strings from every tool"
+        ],
+        advancedAnswer: 1,
         learnLinks: [
           { title: "Product Management for AI Products", url: "https://www.youtube.com/results?search_query=product+management+AI+agents&sp=EgIYAQ%253D%253D" }
         ]
@@ -220,6 +245,14 @@ export const DAYS = [
           "Because AI agents are always wrong"
         ],
         answer: 1,
+        advancedQuestion: "Which UX pattern best calibrates user trust for an agent that takes destructive actions?",
+        advancedOptions: [
+          "Hide tool calls so the UI feels magical",
+          "Show chain-of-thought, a diff preview, and an explicit approve/reject step before execution",
+          "Auto-run everything and offer a global undo button",
+          "Require a password for every agent action"
+        ],
+        advancedAnswer: 1,
         learnLinks: [
           { title: "Building Trust in AI Systems", url: "https://www.youtube.com/results?search_query=trust+in+AI+agents+product+design&sp=EgIYAQ%253D%253D" }
         ]
@@ -234,6 +267,14 @@ export const DAYS = [
         ],
         answer: 2,
         toolQuestion: true,
+        advancedQuestion: "Claude Code's permission model for shell commands is best described as:",
+        advancedOptions: [
+          "Fully autonomous with no user interaction",
+          "A per-command approval prompt with optional session-level allow-lists",
+          "Sandboxed execution in a remote VM with no local effect",
+          "Static analysis only — it never actually runs commands"
+        ],
+        advancedAnswer: 1,
         learnLinks: [
           { title: "Claude Code Overview", url: "https://www.youtube.com/results?search_query=claude+code+AI+coding+agent+demo&sp=EgIYAQ%253D%253D" }
         ]
@@ -287,6 +328,14 @@ export const DAYS = [
           "It uses a rule-based decision tree"
         ],
         answer: 1,
+        advancedQuestion: "During inference, a decoder-only transformer produces output by:",
+        advancedOptions: [
+          "Retrieving the closest training example via vector similarity",
+          "Sampling the next token from a probability distribution over the vocabulary, conditioned on prior tokens",
+          "Executing a handwritten grammar of language rules",
+          "Running a tree search over possible sentence parses"
+        ],
+        advancedAnswer: 1,
         learnLinks: [
           { title: "How Large Language Models Work", url: "https://www.youtube.com/results?search_query=how+do+large+language+models+work+simply&sp=EgIYAQ%253D%253D" }
         ]
@@ -300,6 +349,14 @@ export const DAYS = [
           "Attend to multiple conversations simultaneously"
         ],
         answer: 2,
+        advancedQuestion: "Why does self-attention scale as O(n\u00B2) with sequence length n?",
+        advancedOptions: [
+          "Because each layer has n\u00B2 parameters",
+          "Because every token computes an attention weight against every other token in the sequence",
+          "Because embeddings are n\u00B2-dimensional",
+          "Because the softmax is applied twice per token"
+        ],
+        advancedAnswer: 1,
         learnLinks: [
           { title: "Attention Mechanism Explained", url: "https://www.youtube.com/results?search_query=attention+mechanism+transformers+explained+simply&sp=EgIYAQ%253D%253D" }
         ]
@@ -313,6 +370,14 @@ export const DAYS = [
           "Because they're optimized for plausible-sounding text, not factual accuracy"
         ],
         answer: 3,
+        advancedQuestion: "Which of the following most directly causes LLM hallucinations?",
+        advancedOptions: [
+          "Next-token prediction objectives that optimize likelihood, not truth, with no grounded retrieval",
+          "Insufficient GPU memory at inference time",
+          "Using FP16 precision instead of FP32",
+          "Running the model at temperature 0"
+        ],
+        advancedAnswer: 0,
         learnLinks: [
           { title: "Why AI Hallucinations Happen", url: "https://www.youtube.com/results?search_query=why+do+AI+LLMs+hallucinate+explained&sp=EgIYAQ%253D%253D" }
         ]
@@ -326,6 +391,14 @@ export const DAYS = [
           "A setting that controls the AI's personality"
         ],
         answer: 0,
+        advancedQuestion: "Which statement about context windows is most accurate?",
+        advancedOptions: [
+          "They represent the maximum tokens (input + output) a model can attend to in a single forward pass",
+          "They are measured in characters and equal across all models",
+          "They only limit output length, not input",
+          "They have no impact on compute cost once loaded"
+        ],
+        advancedAnswer: 0,
         learnLinks: [
           { title: "LLM Context Windows Explained", url: "https://www.youtube.com/results?search_query=LLM+context+window+explained&sp=EgIYAQ%253D%253D" }
         ]
@@ -340,6 +413,14 @@ export const DAYS = [
         ],
         answer: 1,
         toolQuestion: true,
+        advancedQuestion: "Perplexity's grounding strategy is best classified as:",
+        advancedOptions: [
+          "Fine-tuning on web corpora",
+          "RAG over a live web index with inline citations injected into the prompt",
+          "Reinforcement learning from user feedback only",
+          "A symbolic knowledge graph lookup"
+        ],
+        advancedAnswer: 1,
         learnLinks: [
           { title: "How Perplexity AI Works", url: "https://www.youtube.com/results?search_query=perplexity+AI+how+it+works+search&sp=EgIYAQ%253D%253D" }
         ]
@@ -393,6 +474,14 @@ export const DAYS = [
           "Prompting — writing clear instructions in plain language"
         ],
         answer: 3,
+        advancedQuestion: "For a new AI feature with tight timelines, the optimal first iteration is typically:",
+        advancedOptions: [
+          "Few-shot prompting with a strong system prompt and eval harness before touching retrieval",
+          "LoRA fine-tuning on a synthetic dataset generated from product logs",
+          "Full pretraining of a domain-specific model",
+          "Deploying a mixture-of-experts ensemble across three providers"
+        ],
+        advancedAnswer: 0,
         learnLinks: [
           { title: "Prompting vs RAG vs Fine-Tuning", url: "https://www.youtube.com/results?search_query=prompting+vs+RAG+vs+fine+tuning+when+to+use&sp=EgIYAQ%253D%253D" }
         ]
@@ -406,6 +495,14 @@ export const DAYS = [
           "Removes the need for any prompt engineering"
         ],
         answer: 2,
+        advancedQuestion: "In a production RAG pipeline, the retrieval step most commonly uses:",
+        advancedOptions: [
+          "A SQL LIKE query over raw document text",
+          "Dense vector similarity (often cosine) over embedded chunks, optionally reranked",
+          "A bloom filter on document hashes",
+          "Regex matching against the user query"
+        ],
+        advancedAnswer: 1,
         learnLinks: [
           { title: "RAG Explained in 5 Minutes", url: "https://www.youtube.com/results?search_query=RAG+retrieval+augmented+generation+explained+simply&sp=EgIYAQ%253D%253D" }
         ]
@@ -419,6 +516,14 @@ export const DAYS = [
           "It removes the model's ability to generate creative text"
         ],
         answer: 0,
+        advancedQuestion: "RAG reduces hallucinations primarily because:",
+        advancedOptions: [
+          "It lowers the model's temperature automatically",
+          "Retrieved passages are injected into the prompt, grounding generation in verifiable source text",
+          "It replaces the LLM with a search engine",
+          "It disables the model's parametric knowledge"
+        ],
+        advancedAnswer: 1,
         learnLinks: [
           { title: "How RAG Reduces Hallucinations", url: "https://www.youtube.com/results?search_query=RAG+reduce+hallucinations+explained&sp=EgIYAQ%253D%253D" }
         ]
@@ -432,6 +537,14 @@ export const DAYS = [
           "Only when the model needs to deeply learn domain-specific patterns that prompting and RAG can't handle"
         ],
         answer: 3,
+        advancedQuestion: "Which scenario most justifies LoRA fine-tuning over prompt engineering + RAG?",
+        advancedOptions: [
+          "You need the model to adopt a specific output format it consistently fails at, with 10K+ labeled examples",
+          "You need to answer questions about documents that change hourly",
+          "You want to reduce first-call latency",
+          "You want to avoid paying for a vector database"
+        ],
+        advancedAnswer: 0,
         learnLinks: [
           { title: "When to Fine-Tune an LLM", url: "https://www.youtube.com/results?search_query=when+to+fine+tune+LLM+vs+RAG&sp=EgIYAQ%253D%253D" }
         ]
@@ -446,6 +559,14 @@ export const DAYS = [
         ],
         answer: 1,
         toolQuestion: true,
+        advancedQuestion: "v0's code generation pipeline is best characterized as:",
+        advancedOptions: [
+          "Symbolic DSL compilation from wireframes",
+          "Prompt-driven LLM generation grounded in a shadcn/ui + Tailwind component library, iterated via agentic edits",
+          "Template substitution with no LLM involvement",
+          "End-to-end training on a proprietary UI dataset"
+        ],
+        advancedAnswer: 1,
         learnLinks: [
           { title: "v0 by Vercel Demo", url: "https://www.youtube.com/results?search_query=v0+vercel+AI+UI+generation+demo&sp=EgIYAQ%253D%253D" }
         ]
@@ -499,6 +620,14 @@ export const DAYS = [
           "Because investors only care about AI metrics"
         ],
         answer: 2,
+        advancedQuestion: "Which metrics layer is unique to AI products and absent from traditional SaaS dashboards?",
+        advancedOptions: [
+          "DAU / MAU",
+          "Output quality metrics such as hallucination rate, groundedness, and eval pass-rate",
+          "Gross retention",
+          "Feature adoption funnels"
+        ],
+        advancedAnswer: 1,
         learnLinks: [
           { title: "AI Product Metrics Every PM Should Know", url: "https://www.youtube.com/results?search_query=AI+product+metrics+for+product+managers&sp=EgIYAQ%253D%253D" }
         ]
@@ -512,6 +641,14 @@ export const DAYS = [
           "How many tasks the PM completes per sprint"
         ],
         answer: 0,
+        advancedQuestion: "For an agent that drafts emails, which decomposition of task completion is most useful?",
+        advancedOptions: [
+          "A single binary 'done / not done' label",
+          "Split into autonomous, assisted, and partial completion, tracked by workflow step",
+          "Only count completions that required zero edits",
+          "Measure total tokens generated"
+        ],
+        advancedAnswer: 1,
         learnLinks: [
           { title: "Task Completion Rate for AI", url: "https://www.youtube.com/results?search_query=AI+task+completion+rate+metric+explained&sp=EgIYAQ%253D%253D" }
         ]
@@ -525,6 +662,14 @@ export const DAYS = [
           "Potentially disqualifying — in high-stakes domains, even small error rates are dangerous"
         ],
         answer: 3,
+        advancedQuestion: "In a high-stakes domain, the correct way to frame acceptable hallucination thresholds is:",
+        advancedOptions: [
+          "As a fixed industry-wide benchmark (e.g., 1%)",
+          "As a function of expected harm per error and the presence of a human-in-the-loop safeguard",
+          "As the inverse of model size",
+          "As the same threshold used for general consumer chatbots"
+        ],
+        advancedAnswer: 1,
         learnLinks: [
           { title: "AI Hallucination in Healthcare", url: "https://www.youtube.com/results?search_query=AI+hallucination+rate+healthcare+risk&sp=EgIYAQ%253D%253D" }
         ]
@@ -538,6 +683,14 @@ export const DAYS = [
           "Increase the AI's confidence level"
         ],
         answer: 2,
+        advancedQuestion: "The most diagnostic way to interpret an 80% override rate is to:",
+        advancedOptions: [
+          "Treat all overrides as equal and lower model temperature",
+          "Segment overrides by query type, edit distance, and user cohort to find where the model genuinely fails",
+          "Assume the model is fine and train users harder",
+          "Remove the feature from the roadmap"
+        ],
+        advancedAnswer: 1,
         learnLinks: [
           { title: "Human-AI Override Patterns", url: "https://www.youtube.com/results?search_query=human+override+AI+product+design&sp=EgIYAQ%253D%253D" }
         ]
@@ -552,6 +705,14 @@ export const DAYS = [
         ],
         answer: 1,
         toolQuestion: true,
+        advancedQuestion: "Copilot's 'persistence rate' improves on raw acceptance rate because it measures:",
+        advancedOptions: [
+          "How long the Copilot UI stays on screen",
+          "Whether accepted code survives unchanged in the codebase after some time, indicating real utility",
+          "Number of suggestions per file",
+          "Latency of each completion"
+        ],
+        advancedAnswer: 1,
         learnLinks: [
           { title: "Copilot Metrics That Matter", url: "https://www.youtube.com/results?search_query=github+copilot+acceptance+rate+metrics&sp=EgIYAQ%253D%253D" }
         ]
@@ -605,6 +766,14 @@ export const DAYS = [
           "User, admin, and developer safety"
         ],
         answer: 1,
+        advancedQuestion: "Which control belongs to the 'output safety' layer rather than 'input safety'?",
+        advancedOptions: [
+          "Prompt injection detection on incoming messages",
+          "A toxicity classifier on the model's generated response before it reaches the user",
+          "Allow-listing authenticated users",
+          "Rate-limiting by IP"
+        ],
+        advancedAnswer: 1,
         learnLinks: [
           { title: "AI Safety Layers Explained", url: "https://www.youtube.com/results?search_query=AI+safety+layers+input+output+behavioral&sp=EgIYAQ%253D%253D" }
         ]
@@ -618,6 +787,14 @@ export const DAYS = [
           "A seatbelt that's optional for passengers"
         ],
         answer: 2,
+        advancedQuestion: "A robust guardrail strategy for an LLM product usually combines:",
+        advancedOptions: [
+          "One large system prompt and nothing else",
+          "Deterministic pre/post filters, policy classifiers, and a constrained tool schema, layered defense-in-depth",
+          "Relying solely on RLHF in the base model",
+          "Disabling the model's output entirely"
+        ],
+        advancedAnswer: 1,
         learnLinks: [
           { title: "AI Guardrails for Product Teams", url: "https://www.youtube.com/results?search_query=AI+guardrails+explained+product+management&sp=EgIYAQ%253D%253D" }
         ]
@@ -631,6 +808,14 @@ export const DAYS = [
           "Comply with heavy regulation including bias audits and human oversight"
         ],
         answer: 3,
+        advancedQuestion: "Under the EU AI Act, which obligation is specifically required for high-risk systems?",
+        advancedOptions: [
+          "Open-sourcing the model weights",
+          "Conformity assessment, risk management system, data governance, and post-market monitoring",
+          "A single annual review by the vendor",
+          "Mandatory use of European-trained models only"
+        ],
+        advancedAnswer: 1,
         learnLinks: [
           { title: "EU AI Act Risk Categories", url: "https://www.youtube.com/results?search_query=EU+AI+Act+risk+classification+explained&sp=EgIYAQ%253D%253D" }
         ]
@@ -644,6 +829,14 @@ export const DAYS = [
           "Only needed for consumer-facing products"
         ],
         answer: 2,
+        advancedQuestion: "Effective internal AI governance most closely resembles:",
+        advancedOptions: [
+          "A legal disclaimer on the product page",
+          "A continuous program: model cards, eval gates in CI, incident playbooks, and clear accountability owners",
+          "A single VP reviewing launches quarterly",
+          "A one-off bias audit before launch"
+        ],
+        advancedAnswer: 1,
         learnLinks: [
           { title: "AI Governance Framework", url: "https://www.youtube.com/results?search_query=AI+governance+framework+product+management&sp=EgIYAQ%253D%253D" }
         ]
@@ -658,6 +851,14 @@ export const DAYS = [
         ],
         answer: 1,
         toolQuestion: true,
+        advancedQuestion: "OpenHands-style sandboxing for coding agents typically relies on:",
+        advancedOptions: [
+          "Running the LLM on a smaller model",
+          "Containerized execution with a restricted tool surface and explicit file-system / network policies",
+          "Disabling all file writes regardless of path",
+          "Hardware security modules on the user's laptop"
+        ],
+        advancedAnswer: 1,
         learnLinks: [
           { title: "AI Agent Safety Patterns", url: "https://www.youtube.com/results?search_query=AI+agent+safety+sandboxing+permissions&sp=EgIYAQ%253D%253D" }
         ]
@@ -711,6 +912,14 @@ export const DAYS = [
           "It can be used by multiple users simultaneously"
         ],
         answer: 2,
+        advancedQuestion: "A model is considered multimodal when it:",
+        advancedOptions: [
+          "Calls more than one API endpoint",
+          "Encodes different input types (text, image, audio) into a shared representation and can generate across them",
+          "Is deployed on multiple clouds",
+          "Has more than 10B parameters"
+        ],
+        advancedAnswer: 1,
         learnLinks: [
           { title: "Multimodal AI Explained", url: "https://www.youtube.com/results?search_query=multimodal+AI+explained+simply&sp=EgIYAQ%253D%253D" }
         ]
@@ -724,6 +933,14 @@ export const DAYS = [
           "Image-to-text (describing photographs)"
         ],
         answer: 2,
+        advancedQuestion: "Which of the following is NOT a typical modality pair handled by modern multimodal LLMs?",
+        advancedOptions: [
+          "Image \u2192 text (visual question answering)",
+          "Text \u2192 video (generative video)",
+          "Audio \u2192 text (speech recognition)",
+          "GPS coordinates \u2192 color palette (cartographic encoding)"
+        ],
+        advancedAnswer: 3,
         learnLinks: [
           { title: "AI Modalities Explained", url: "https://www.youtube.com/results?search_query=AI+modalities+text+image+audio+video+explained&sp=EgIYAQ%253D%253D" }
         ]
@@ -737,6 +954,14 @@ export const DAYS = [
           "An interface that changes modality based on context — voice while driving, visual while browsing"
         ],
         answer: 3,
+        advancedQuestion: "Designing an adaptive multimodal interface primarily requires:",
+        advancedOptions: [
+          "A single fixed input pipeline",
+          "Context signals (device, motion, attention) driving dynamic modality selection and output formatting",
+          "Forcing users to pick their modality at signup",
+          "Training a separate model per modality with no coordination"
+        ],
+        advancedAnswer: 1,
         learnLinks: [
           { title: "Adaptive AI Interfaces", url: "https://www.youtube.com/results?search_query=adaptive+AI+interface+multimodal+product+design&sp=EgIYAQ%253D%253D" }
         ]
@@ -750,6 +975,14 @@ export const DAYS = [
           "Ensuring the AI is multimodal in name only"
         ],
         answer: 1,
+        advancedQuestion: "Which tradeoff is most acute when adding image and audio inputs to a previously text-only AI product?",
+        advancedOptions: [
+          "Font rendering consistency",
+          "Per-modality latency, token cost, and eval coverage exploding combinatorially",
+          "Database index size",
+          "HTML form validation"
+        ],
+        advancedAnswer: 1,
         learnLinks: [
           { title: "Multimodal AI Product Challenges", url: "https://www.youtube.com/results?search_query=multimodal+AI+product+management+challenges&sp=EgIYAQ%253D%253D" }
         ]
@@ -764,6 +997,14 @@ export const DAYS = [
         ],
         answer: 1,
         toolQuestion: true,
+        advancedQuestion: "NotebookLM's Audio Overviews pipeline most likely involves:",
+        advancedOptions: [
+          "A single TTS model reading the source aloud verbatim",
+          "LLM-generated dialogue script grounded in uploaded sources, then rendered via multi-speaker neural TTS",
+          "A prerecorded audio library selected by keyword",
+          "Direct audio-to-audio generation with no text intermediate"
+        ],
+        advancedAnswer: 1,
         learnLinks: [
           { title: "NotebookLM Audio Overview Feature", url: "https://www.youtube.com/results?search_query=NotebookLM+audio+overview+podcast+feature&sp=EgIYAQ%253D%253D" }
         ]
@@ -817,6 +1058,14 @@ export const DAYS = [
           "Eliminate all human touchpoints in the product"
         ],
         answer: 1,
+        advancedQuestion: "When redesigning a legacy workflow into an AI-native one, the highest-leverage question is:",
+        advancedOptions: [
+          "Which UI framework should we migrate to?",
+          "Which steps in the current journey can be collapsed or eliminated entirely by a capable model?",
+          "How do we add a chat widget to the existing screens?",
+          "How do we train our own foundation model?"
+        ],
+        advancedAnswer: 1,
         learnLinks: [
           { title: "AI-Native PM Mindset", url: "https://www.youtube.com/results?search_query=AI+native+product+management+mindset+shift&sp=EgIYAQ%253D%253D" }
         ]
@@ -830,6 +1079,14 @@ export const DAYS = [
           "Because the AI product that learns from user feedback fastest wins"
         ],
         answer: 3,
+        advancedQuestion: "A data flywheel becomes a defensible moat when:",
+        advancedOptions: [
+          "User interactions generate proprietary training signal that compounds into model improvements competitors cannot replicate",
+          "The product has the largest marketing budget",
+          "Any user can export the training data freely",
+          "The model is fine-tuned once at launch"
+        ],
+        advancedAnswer: 0,
         learnLinks: [
           { title: "AI Product Competitive Moats", url: "https://www.youtube.com/results?search_query=AI+product+competitive+moat+learning+speed&sp=EgIYAQ%253D%253D" }
         ]
@@ -843,6 +1100,14 @@ export const DAYS = [
           "Probabilistic means the product works randomly"
         ],
         answer: 2,
+        advancedQuestion: "Designing for probabilistic outputs usually means:",
+        advancedOptions: [
+          "Asserting the model is correct and hiding uncertainty",
+          "Exposing calibrated confidence, supporting graceful fallbacks, and evaluating with statistical rigor",
+          "Running the model at temperature 0 and calling it deterministic",
+          "Removing evals entirely"
+        ],
+        advancedAnswer: 1,
         learnLinks: [
           { title: "Probabilistic Thinking for AI PMs", url: "https://www.youtube.com/results?search_query=probabilistic+thinking+AI+product+management&sp=EgIYAQ%253D%253D" }
         ]
@@ -856,6 +1121,14 @@ export const DAYS = [
           "Start with the user problem, not the technology"
         ],
         answer: 3,
+        advancedQuestion: "The recommended first deliverable for a new AI-native feature is:",
+        advancedOptions: [
+          "A custom fine-tuned model",
+          "A crisp user-outcome hypothesis paired with an eval set that encodes what 'good' looks like",
+          "A marketing launch plan",
+          "A vector database procurement plan"
+        ],
+        advancedAnswer: 1,
         learnLinks: [
           { title: "AI PM Playbook — Start with the Problem", url: "https://www.youtube.com/results?search_query=AI+product+manager+playbook+user+problem+first&sp=EgIYAQ%253D%253D" }
         ]
@@ -870,6 +1143,14 @@ export const DAYS = [
         ],
         answer: 1,
         toolQuestion: true,
+        advancedQuestion: "Which tool most closely matches 'prompt \u2192 running full-stack app in the browser with no local toolchain'?",
+        advancedOptions: [
+          "GitHub Copilot (IDE autocomplete)",
+          "Bolt.new (WebContainers + agentic code gen + preview + deploy)",
+          "Figma (visual design only)",
+          "Postman (API testing)"
+        ],
+        advancedAnswer: 1,
         learnLinks: [
           { title: "Bolt.new Full Demo", url: "https://www.youtube.com/results?search_query=bolt.new+AI+app+builder+demo&sp=EgIYAQ%253D%253D" }
         ]
